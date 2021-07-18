@@ -361,6 +361,24 @@ protected void finalize() throws Throwable { }//实例被垃圾回收器回收�
 
 反射赋予了我们在运行时分析类以及执行类中方法的能力，通过反射可以获取任意一个类的所有属性和方法
 
+#### 为什么需要反射？
+
+- 反射让开发人员可以通过外部类的全路径名创建对象，并使用这些类，实现一些扩展的功能。
+- 反射让开发人员可以枚举出类的全部成员，包括构造函数、属性、方法。以帮助开发者写出正确的代码。
+- 测试时可以利用反射 API 访问类的私有成员，以保证测试代码覆盖率
+
+#### 反射API
+
+java类的成员包括属性字段、构造函数、方法，反射的API也是与这几个成员相关
+
+- Field类：提供有关类的属性信息，以及对它的动态访问权限，它是一个封装反射类的属性的类
+- Constructror类：提供有关类的构造方法的信息，以及对它的动态访问权限，它是一个封装反射类的构造方法的类
+- Method类：提供关于类的方法的信息，包括抽象方法，它是用来封装反射类方法的一个类
+- Class类：表示正在运行的java应用程序中的类的实例
+- Object类：Object是所有java类的父类，所有对象都默认实现了Object类的方法
+
+
+
 #### 反射的应用场景
 
 正是因为反射，你才能这么轻松地使用各种框架。像 Spring/Spring Boot、MyBatis 等等框架中都大量使用了反射机制
@@ -398,29 +416,117 @@ protected void finalize() throws Throwable { }//实例被垃圾回收器回收�
 
    
 
-**这些框架也大量使用了动态代理，而动态代理的实现也依赖反射**
+反射示例
 
 ```java
-public class DebugInvocationHandler implements InvocationHandler {
-    /**
-     * 代理类中的真实对象
-     */
-    private final Object target;
+// 1.通过字符串获取Class对象，这个字符串必须带上完整路径名
+Class studentClass = Class.forName("com.test.reflection.Student");
+// 2.通过类的class属性
+Class studentClass2 = Student.class;
+// 3.通过对象的getClass()函数
+Student studentObject = new Student();
+Class studentClass3 = studentObject.getClass();
 
-    public DebugInvocationHandler(Object target) {
-        this.target = target;
-    }
-
-
-    public Object invoke(Object proxy, Method method, Object[] args) throws InvocationTargetException, IllegalAccessException {
-        System.out.println("before method " + method.getName());
-        Object result = method.invoke(target, args);
-        System.out.println("after method " + method.getName());
-        return result;
-    }
+// 1.获取所有声明的字段
+Field[] declaredFieldList = studentClass.getDeclaredFields();
+for (Field declaredField : declaredFieldList) {
+    System.out.println("declared Field: " + declaredField);
+}
+// 2.获取所有公有的字段
+Field[] fieldList = studentClass.getFields();
+for (Field field : fieldList) {
+    System.out.println("field: " + field);
 }
 
+// 1.获取所有声明的构造方法
+Constructor[] declaredConstructorList = studentClass.getDeclaredConstructors();
+for (Constructor declaredConstructor : declaredConstructorList) {
+    System.out.println("declared Constructor: " + declaredConstructor);
+}
+// 2.获取所有公有的构造方法
+Constructor[] constructorList = studentClass.getConstructors();
+for (Constructor constructor : constructorList) {
+    System.out.println("constructor: " + constructor);
+}
+
+// 1.获取所有声明的函数
+Method[] declaredMethodList = studentClass.getDeclaredMethods();
+for (Method declaredMethod : declaredMethodList) {
+    System.out.println("declared Method: " + declaredMethod);
+}
+// 2.获取所有公有的函数
+Method[] methodList = studentClass.getMethods();
+for (Method method : methodList) {
+    System.out.println("method: " + method);
+}
+
+// 1.通过字符串获取Class对象，这个字符串必须带上完整路径名
+Class studentClass = Class.forName("com.test.reflection.Student");
+// 2.获取声明的构造方法，传入所需参数的类名，如果有多个参数，用','连接即可
+Constructor studentConstructor = studentClass.getDeclaredConstructor(String.class);
+// 如果是私有的构造方法，需要调用下面这一行代码使其可使用，公有的构造方法则不需要下面这一行代码
+studentConstructor.setAccessible(true);
+// 使用构造方法的newInstance方法创建对象，传入构造方法所需参数，如果有多个参数，用','连接即可
+Object student = studentConstructor.newInstance("NameA");
+// 3.获取声明的字段，传入字段名
+Field studentAgeField = studentClass.getDeclaredField("studentAge");
+// 如果是私有的字段，需要调用下面这一行代码使其可使用，公有的字段则不需要下面这一行代码
+// studentAgeField.setAccessible(true);
+// 使用字段的set方法设置字段值，传入此对象以及参数值
+studentAgeField.set(student,10);
+// 4.获取声明的函数，传入所需参数的类名，如果有多个参数，用','连接即可
+Method studentShowMethod = studentClass.getDeclaredMethod("show",String.class);
+// 如果是私有的函数，需要调用下面这一行代码使其可使用，公有的函数则不需要下面这一行代码
+studentShowMethod.setAccessible(true);
+// 使用函数的invoke方法调用此函数，传入此对象以及函数所需参数，如果有多个参数，用','连接即可。函数会返回一个Object对象，使用强制类型转换转成实际类型即可
+Object result = studentShowMethod.invoke(student,"message");
+System.out.println("result: " + result);
+
 ```
+
+
+
+### 注解
+
+#### 什么是注解？
+
+注解是放在Java源码的类、方法、字段、参数前的一种特殊“注释”
+
+#### 使用注解的三个步骤
+
+1. 定义注解
+
+   - @interface
+   - 定义参数与默认值
+   - 添加元注解
+
+2. 使用
+
+3. 读取并执行
+
+   因为注解定义后也是一种`class`，所有的注解都继承自`java.lang.annotation.Annotation`，因此，读取注解，需要使用反射API
+
+
+
+### 字符编码
+
+计算机中储存的信息都是用二进制数表示的；而我们在屏幕上看到的英文、汉字等字符是二进制数转换之后的结果。通俗的说，按照何种规则将字符存储在计算机中，如'a'用什么表示，称为"编码"；反之，将存储在计算机中的二进制数解析显示出来，称为"解码"，如同密码学中的加密和解密。在解码过程中，如果使用了错误的解码规则，则导致'a'解析成'b'或者乱码
+
+#### 字符集
+
+是一个系统支持的所有抽象字符的集合。字符是各种文字和符号的总称，包括各国家文字、标点符号、图形符号、数字等。
+
+#### 字符编码
+
+是一套法则，使用该法则能够对自然语言的字符的一个集合（如字母表或音节表），与其他东西的一个集合（如号码或电脉冲）进行配对。即在符号集合与数字系统之间建立对应关系，它是信息处理的一项基本技术。
+
+而以计算机为基础的信息处理系统则是利用元件（硬件）不同状态的组合来存储和处理信息的。元件不同状态的组合能代表数字系统的数字，因此字符编码就是将符号转换为计算机可以接受的数字系统的数，称为数字代码。
+
+#### 常见字符集
+
+ASCII字符集、GB2312字符集、BIG5字符集、GB18030字符集、Unicode字符集等。计算机要准确的处理各种字符集文字，需要进行字符编码，以便计算机能够识别和存储各种文字。
+
+
 
 
 
@@ -486,6 +592,36 @@ java中的异常都有一个共同的祖先:Throwable类，Throwable有两个重
 #### 使用try-with-resource来代替try-catch-finally
 
 面对必须要关闭的资源，我们总是应该使用try-with-resource而不是try-finally，随之产生的代码更简短
+
+
+
+### lambda表达式
+
+#### 什么是lambda表达式
+
+函数式编程（Functional Programming）是把函数作为基本运算单元，函数可以作为变量，可以接收函数，还可以返回函数。历史上研究函数式编程的理论是Lambda演算，所以我们经常把支持函数式编程的编码风格称为Lambda表达式
+
+#### 为什么要使用lambda表达式
+
+1. 避免匿名内部类定义过多
+2. 可以让你的代码看起来简洁
+3. 去掉了一堆没有意义的代码，只留下核心的逻辑
+
+#### 什么是函数式接口
+
+任何接口，如果只包含唯一一个抽象方法，那么它就是一个函数式接口，对于函数式接口，我们可以通过lambda表达式来创建该接口的对象
+
+#### 演进过程
+
+1. 外部类
+2. 静态内部类
+3. 局部内部类
+4. 匿名局部内部类
+5. lambda
+
+
+
+
 
 ### I/O流
 
@@ -619,3 +755,303 @@ Map 键值对集合
 
 
 ![](E:\文档图片\JAVA容器.png)
+
+
+
+
+
+### 并发编程
+
+#### 并发与并行的定义及区别
+
+并发：同一时间段，多个任务都在执行 (单位时间内不一定同时执行)；
+
+并行：单位时间内，多个任务同时执行
+
+#### 程序，进程，线程
+
+程序是指令以及数据的集合，进程是资源分配的基本单位，线程就是独立的执行路径，是cpu调度的基本单位，每个线程都在自己的工作内存交互，如果内存控制不当，可能会造成数据不一致
+
+#### java线程的三种创建方式
+
+1. Thread Class 实现了Runnable接口
+   1. 自定义线程类继承Thread类
+   2. 重写run()方法
+   3. 创建线程对象，调用start()方法启动线程
+2. Runnable接口
+   1. 实现runnable接口
+   2. 重写run方法
+   3. 执行线程需要丢入runnable接口实现类，调用start方法
+3. Callable接口
+   1. 实现Callable接口，需要返回值类型
+   2. 重写call方法，需要抛出异常
+   3. 创建目标对象
+   4. 创建执行服务：ExecutorService ser = Executors.newFixedThreadPool(1);
+   5. 提交执行：Future < Boolean>  result1 = ser.submit(t1);
+   6. 获取结果：boolean r1 = result.get()
+   7. 关闭服务：ser.shutdownNow();
+
+![](E:\文档图片\java线程创建方式.png)
+
+
+
+
+
+#### 为什么要使用多线程？
+
+先从总体上来说：
+
+- **从计算机底层来说：** 线程可以比作是轻量级的进程，是程序执行的最小单位,线程间的切换和调度的成本远远小于进程。另外，多核 CPU 时代意味着多个线程可以同时运行，这减少了线程上下文切换的开销。
+- **从当代互联网发展趋势来说：** 现在的系统动不动就要求百万级甚至千万级的并发量，而多线程并发编程正是开发高并发系统的基础，利用好多线程机制可以大大提高系统整体的并发能力以及性能
+
+计算机底层来说：
+
+- **单核时代：** 在单核时代多线程主要是为了提高 CPU 和 IO 设备的综合利用率。举个例子：当只有一个线程的时候会导致 CPU 计算时，IO 设备空闲；进行 IO 操作时，CPU 空闲。我们可以简单地说这两者的利用率目前都是 50%左右。但是当有两个线程的时候就不一样了，当一个线程执行 CPU 计算时，另外一个线程可以进行 IO 操作，这样两个的利用率就可以在理想情况下达到 100%了。
+- **多核时代:** 多核时代多线程主要是为了提高 CPU 利用率。举个例子：假如我们要计算一个复杂的任务，我们只用一个线程的话，CPU 只会一个 CPU 核心被利用到，而创建多个线程就可以让多个 CPU 核心被利用到，这样就提高了 CPU 的利用率
+
+#### 线程的生命周期与状态
+
+Java 线程在运行的生命周期中的指定时刻只可能处于下面 5种不同状态的其中一个状态
+
+
+
+![](E:\文档图片\线程状态.png)
+
+![](E:\文档图片\线程状态与操作.png)
+
+![](E:\文档图片\线程方法.png)
+
+#### 停止线程
+
+- 不推荐使用jdk提供的stop()，destroy()方法
+- 推荐线程自己停下来
+- 建议使用一个标志位进行终止变量，当flag=false，则终止线程运行
+
+```java
+public class TestStop implements Runnable{
+//1.线程中定义线程体使用的标识
+private boolean flag = true;
+
+@override
+public void run(){
+// 2.线程体使用该标识
+	while(flag){
+	System.out.println("run");
+	}
+}
+
+// 3.对外提供方法改变标识
+public void stop(){
+this.flag = false;
+}
+}
+```
+
+
+
+#### 线程休眠
+
+![](E:\文档图片\线程休眠.png)
+
+#### 线程礼让
+
+![](E:\文档图片\线程礼让.png)
+
+#### Join
+
+![](E:\文档图片\join.png)
+
+#### jvm线程状态
+
+![](E:\文档图片\java虚拟机线程状态.png)
+
+#### 线程优先级
+
+优先级低只是意味着获得调度的概率低，并不是优先级低就不会被调用了，这都要看cpu调度
+
+![](E:\文档图片\线程优先级.png)
+
+#### 守护线程
+
+Thread.setDaemon(true)
+
+![](E:\文档图片\守护线程.png)
+
+#### 线程同步机制
+
+处理多线程问题时，多个线程访问同一对象，并且还有线程要对这个对象进行修改，这时候就需要线程同步，线程同步其实就是一种等待机制，多个需要同时访问此对象的线程进入这个对象的等待池形成队列，等待前面线程使用完毕，下一个线程再使用
+
+- 由于同一进程的多个线程共享同一块存储空间，在带来方便的同时，也带来了访问冲突问题，为了保证数据在方法中被访问时的正确性，在访问时加入锁机制**synchronized**，当一个线程获得对象的排他锁，独占资源，其他线程必须等待，使用后释放锁即可，存在以下问题：
+  - 一个线程持有锁会导致其他所有需要此锁的线程挂起
+  - 在多线程竞争下，加锁，释放锁会导致比较多的上下文切换和调度延时，引起性能问你题
+  - 如果一个优先级高的线程等待一个优先级低的线程释放锁，会导致优先级倒置，引起性能问题
+
+#### java线程同步方法
+
+- 由于我们可以通过private关键字保证数据对象只能被方法访问，所以我们只需要针对方法提出一套机制，这套机制就是synchronized关键字，它包括两种用法：synchronized方法和synchronized块
+- synchronized方法控制对对象的访问，每个对象对应一把锁，每个synchronized方法多必须获得调用该方法的对象的锁才能执行，否则线程会被阻塞，方法一旦执行，就独占该锁，直到该方法返回才释放锁，后面被阻塞的线程才能获得这个锁，继续执行
+- 缺陷：若将一个大的方法申明为synchronized将会影响效率，只有需要修改的部分才应该加锁
+
+##### synchronized同步块
+
+形式：synchronized(Obj){}
+
+- Obj称之为同步监视器
+  - Obj可以是任何对象，但是推荐使用共享资源作为同步监视器
+  - 同步方法中无需指定同步监视器，因为同步方法的同步监视器就是this
+- 同步监视器的执行过程：
+  1. 第一个线程访问：锁定同步监视器，执行其中代码
+  2. 第二个线程访问，发现同步监视器被锁定，无法访问
+  3. 第一个线程访问完毕，解锁同步监视器
+  4. 第二线程访问，发现同步监视器没有锁，然后锁定并访问
+
+#### 死锁
+
+死锁的必要条件
+
+- 互斥
+- 不可剥夺
+- 请求与保持
+- 循环等待
+
+```java
+
+class Mirror{
+
+}
+
+class Lipstick{
+
+}
+
+class MakeUp extends Thread{
+    static Lipstick lipstick = new Lipstick();
+    static Mirror mirror = new Mirror();
+
+    int choice;
+    String girlName;
+
+    MakeUp(int choice,String girlName){
+        this.choice = choice;
+        this.girlName = girlName;
+    }
+
+    @Override
+    public void run(){
+        try{
+            makeup();
+
+        } catch (InterruptedException e){
+            e.printStackTrace();
+        }
+    }
+
+    private void makeup() throws InterruptedException{
+        if(choice == 0){
+            synchronized (lipstick){
+                System.out.println(this.girlName + "获得镜子的锁");
+                Thread.sleep(1000);
+            }
+            synchronized (mirror){
+                System.out.println(this.girlName + "获得镜子的锁");
+            }
+        }
+        else{
+            synchronized (mirror){
+                System.out.println(this.girlName + "获得镜子的锁");
+                Thread.sleep(2000);
+            }
+            synchronized (lipstick){
+                System.out.println(this.girlName + "获得口红的锁");
+            }
+        }
+    }
+
+}
+public class DeakLock {
+    public static void main(String[] args) {
+        MakeUp makeUp1 = new MakeUp(0,"灰姑娘");
+        MakeUp makeUp2 = new MakeUp(1,"白雪公主");
+        makeUp1.start();
+        makeUp2.start();
+    }
+}
+
+```
+
+#### Lock锁
+
+- 从jdk5.0开始，java提供了更强大的线程同步机制-通过显示定义同步锁对象来实现同步，同步锁使用Lock对象充当
+- java.util.concurrent.locks.Lock接口是控制多个线程对共享资源进行访问的工具，锁提供了对共享资源的独占访问，每次只有一个线程对Lock对象加锁，线程开始访问共享资源之前应该先获得Lock对象
+- ReentrantLock类实现了Lock，它拥有与synchronized相同的并发性和内存语义，在实现线程安全的控制中，比较常用的是ReentrantLock，可以显示加锁，释放锁
+
+synchronized与Lock的对比
+
+- Lock是显示锁，synchronized是隐式锁，出了作用于自动释放
+
+- Lock只有代码块锁，synchronized有代码块锁和方法锁
+
+- 使用Lock锁，JVM将花费较少的时间来调度线程
+
+- 优先使用顺序
+
+   Lock>同步代码块>同步方法
+
+#### 线程协作
+
+##### 线程通信
+
+应用场景：生产者消费者问题
+
+- 假设仓库中只能存放一件产品，生产者将生产出来的产品放入仓库，消费者将仓库中产品取走消费
+- 如果仓库中没有产品，则生产者将产品放入仓库，否则生产者停止生产并等待，直到仓库中的产品被消费者取走为止
+- 如果仓库中放有产品，则消费者取走，否则停止消费并等待
+
+分析：
+
+这是一个线程同步问题，生产者和消费者共享同一个资源，并且生产者和消费者之间相互依赖，互为条件
+
+- 对于生产者，没有生产产品之前，需要通知消费者等待，而生产了产品之后，又需要马上通知消费者消费
+- 对于消费者，在消费之后，要通知生产者已经结束消费，需要生产新的产品以供消费
+- 在生产者消费者问题中，仅有synchronized是不够的
+  - synchronized可阻止并发更新同一个共享资源，实现了同步
+  - 但无法用于线程通信
+
+java线程通信方式
+
+- wait
+- wait(timeout)
+- notify
+- notify(all)
+
+解决方式：
+
+1. 管程法 缓冲区
+2. 信号灯
+
+#### 线程池
+
+背景：经常创建和销毁、使用量特别大的资源，比如并发情况下的线程，对性能影响很大
+
+思路：提前创建好多个线程，放入线程池中，使用时直接获取，使用完放回池中，可以避免频繁创建销毁，实现重复利用
+
+好处：
+
+- 提高响应速度
+- 降低资源消耗
+- 便于线程管理
+  - corePoolSize：核心池的大小
+  - maximumPoolSize：最大线程数
+  - keepAliveTime：线程没有任务时最多保持多长时间后会终止
+
+**使用线程池**
+
+- 线程池相关API：ExecutorService和Executors
+- ExecutorService：真正的线程池接口，常见子类ThreadPoolExecutor
+  - void execute(Runnable command):执行命令
+  - Future:执行任务，有返回值
+  - shutdown：关闭连接池
+- Executors：工具类、线程池的工厂类，用于创建并返回不同类型的线程池
+
+### JVM
+
