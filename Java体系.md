@@ -713,7 +713,7 @@ Collection 单个元素集合
   
   - LinkedList 链表实现的集合 实现类
   
-    底层数据结构：双向链表
+    底层数据结构：双向链表 https://blog.csdn.net/huangfan322/article/details/52756441
   
   - Vector 实现类
     
